@@ -1,7 +1,7 @@
 .gradle
 **/build/
 gradle
-src/main/resources/firebase/rummirimkub_firebase-adminsdk.json
+src/main/resources/firebase/rummirimkub-firebase-adminsdk.json
 !**/src/**/build/
 
 # Ignore Gradle GUI config

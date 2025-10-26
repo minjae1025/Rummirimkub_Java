@@ -22,24 +22,26 @@ public class FirebaseService {
         this.firebaseApp = firebaseApp;
     }
 
-    public void save() {
-        Firestore db = FirestoreClient.getFirestore();
-        try {
-            DocumentReference docRef = db.collection("users").document("test1");
-            // Add document data  with id "alovelace" using a hashmap
-            Map<String, Object> data = new HashMap<>();
-            data.put("id", "test1");
-            data.put("password", "1111");
-            //asynchronously write data
-            ApiFuture<WriteResult> result = docRef.set(data);
-            // ...
-            // result.get() blocks on response
-            System.out.println("Update time : " + result.get().getUpdateTime());
-        }
-        catch (ExecutionException e) {
-            throw new RuntimeException(e);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+//    public void save() {
+//        Firestore db = FirestoreClient.getFirestore();
+//        try {
+//            DocumentReference docRef = db.collection("users").document("test1");
+//            // Add document data  with id "alovelace" using a hashmap
+//            Map<String, Object> data = new HashMap<>();
+//            //asynchronously write data
+//            ApiFuture<WriteResult> result = docRef.set(data);
+//            // ...
+//            // result.get() blocks on response
+//            System.out.println("Update time : " + result.get().getUpdateTime());
+//        }
+//        catch (ExecutionException e) {
+//            throw new RuntimeException(e);
+//        } catch (InterruptedException e) {
+//            throw new RuntimeException(e);
+//        }
+//    }
+
+    public void login() {
+
     }
 }

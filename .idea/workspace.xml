@@ -4,7 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="3344306b-a017-4931-93a7-abf11184f015" name="Changes" comment="firebase 연동" />
+    <list default="true" id="3344306b-a017-4931-93a7-abf11184f015" name="Changes" comment="firebase 연동">
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -28,6 +30,16 @@
                 <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
                 <item name="rummirimkub" type="f1a62948:ProjectNode" />
               </path>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="rummirimkub" type="f1a62948:ProjectNode" />
+                <item name="Dependencies" type="6de06a37:ExternalSystemViewDefaultContributor$MyDependenciesNode" />
+              </path>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="rummirimkub" type="f1a62948:ProjectNode" />
+                <item name="Run Configurations" type="7b0102dc:RunConfigurationsNode" />
+              </path>
             </expand>
             <select />
           </tree_state>
@@ -40,6 +52,7 @@
       <list>
         <option value="HTTP Request" />
         <option value="HTML File" />
+        <option value="Interface" />
         <option value="Class" />
       </list>
     </option>
@@ -71,10 +84,14 @@
   <component name="PropertiesComponent">{
   &quot;keyToString&quot;: {
     &quot;DefaultHtmlFileTemplate&quot;: &quot;HTML File&quot;,
+    &quot;Downloaded.Files.Path.Enabled&quot;: &quot;false&quot;,
     &quot;Gradle.Build Rummirimkub_Java.executor&quot;: &quot;Run&quot;,
     &quot;Gradle.Download Sources.executor&quot;: &quot;Run&quot;,
     &quot;Gradle.Rummirimkub_Java [dependencies].executor&quot;: &quot;Run&quot;,
     &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;Repository.Attach.Annotations&quot;: &quot;false&quot;,
+    &quot;Repository.Attach.JavaDocs&quot;: &quot;false&quot;,
+    &quot;Repository.Attach.Sources&quot;: &quot;false&quot;,
     &quot;RequestMappingsPanelOrder0&quot;: &quot;0&quot;,
     &quot;RequestMappingsPanelOrder1&quot;: &quot;1&quot;,
     &quot;RequestMappingsPanelWidth0&quot;: &quot;75&quot;,
@@ -98,7 +115,11 @@
   }
 }</component>
   <component name="RecentsManager">
+    <key name="CreateClassDialog.RecentsKey">
+      <recent name="com.rummirimkub.user" />
+    </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Study\JAVA\Rummirimkub_Java\src\main\resources\templates" />
       <recent name="C:\Study\JAVA\Rummirimkub_Java\src\main\resources\firebase" />
       <recent name="C:\Study\JAVA\Rummirimkub_Java\src\main\resources" />
     </key>
@@ -157,6 +178,9 @@
       </set>
     </attachedChunks>
   </component>
+  <component name="StructureViewState">
+    <option name="selectedTab" value="Logical" />
+  </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
       <changelist id="3344306b-a017-4931-93a7-abf11184f015" name="Changes" comment="" />
@@ -165,6 +189,20 @@
       <option name="presentableId" value="Default" />
       <updated>1757638143293</updated>
       <workItem from="1757638145046" duration="10808000" />
+      <workItem from="1757687010375" duration="791000" />
+      <workItem from="1758762761093" duration="30000" />
+      <workItem from="1760520998009" duration="69000" />
+      <workItem from="1760661489725" duration="82000" />
+      <workItem from="1760661605425" duration="2711000" />
+      <workItem from="1760712038756" duration="10000" />
+      <workItem from="1761087972686" duration="87000" />
+      <workItem from="1761096830487" duration="4764000" />
+      <workItem from="1761143512713" duration="34000" />
+      <workItem from="1761175288926" duration="6038000" />
+      <workItem from="1761183382647" duration="221000" />
+      <workItem from="1761228631309" duration="1738000" />
+      <workItem from="1761261501381" duration="4041000" />
+      <workItem from="1761489590266" duration="107000" />
     </task>
     <task id="LOCAL-00001" summary="firebase 연동">
       <option name="closed" value="true" />
@@ -210,5 +248,15 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="firebase 연동" />
     <option name="LAST_COMMIT_MESSAGE" value="firebase 연동" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <breakpoint enabled="true" type="java-exception">
+          <properties class="java.lang.IllegalStateException" package="java.lang" />
+          <option name="timeStamp" value="1" />
+        </breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>
