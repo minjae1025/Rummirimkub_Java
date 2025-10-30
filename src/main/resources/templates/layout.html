@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:sec="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<header>
+    <div class="bar wrap" style="padding-left:0;padding-right:0" th:fragment="header">
+        <a class="btn" th:herf="@{/}"><strong>Rummirimkub</strong></a>
+        <nav class="nav">
+            <a class="btn ghost" th:href="@{/}">메인</a>
+            <a class="btn ghost" sec:authorize="isAuthenticated()" th:href="@{/user/mypage}">마이페이지</a>
+            <a class="btn outline" sec:authorize="isAnonymous()" th:href="@{/user/login}">로그인</a>
+            <a class="btn outline" sec:authorize="isAuthenticated()" th:href="@{/user/logout}">로그아웃</a>
+            <a class="btn outline" sec:authorize="isAnonymous()" th:href="@{/user/signup}">회원가입</a>
+        </nav>
+    </div>
+</header>
+</body>
+</html>

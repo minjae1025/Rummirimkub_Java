@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<!--rooms.html-->
+<html lang="ko">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>게임방 리스트 - Rummirimkub</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet"
+          th:href="@{/style.css}">
+</head>
+<body>
+
+<header th:insert="~{/layout :: header}"></header>
+
+<main class="wrap">
+    <section id="page-rooms">
+        <div class="card">
+            <div class="card-h"><h2>게임방 리스트</h2>
+                <div class="muted">원하는 방에 참가하거나 새로 만들 수 있습니다.</div>
+            </div>
+            <div class="card-b">
+                <div class="row" style="gap:10px;flex-wrap:wrap;margin-bottom:12px">
+                    <a class="btn" href="#create">방 만들기</a>
+                    <a class="btn ghost" href="index.html">뒤로</a>
+                </div>
+                <div class="card" style="border-radius:12px">
+                    <div class="card-b" style="padding:0">
+                        <table>
+                            <thead>
+                            <tr>
+                                <th style="width:50%">방 이름</th>
+                                <th>모드</th>
+                                <th>인원</th>
+                                <th>핑</th>
+                                <th style="text-align:right">입장</th>
+                            </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="create" class="overlay">
+            <div class="modal">
+                <div class="card-h"><strong>새 방 만들기</strong><a class="btn ghost small" href="#!">닫기</a></div>
+                <div class="card-b grid" style="gap:14px">
+                    <div><label>방 이름</label><input value="나의 첫 번째 방"></div>
+                    <div class="row" style="gap:12px">
+                        <div style="flex:1"><label>모드</label><select>
+                            <option>Casual</option>
+                            <option>Ranked</option>
+                            <option>Custom</option>
+                        </select></div>
+                        <div style="flex:1"><label>정원</label><select>
+                            <option>2</option>
+                            <option>4</option>
+                            <option selected>8</option>
+                            <option>10</option>
+                        </select></div>
+                    </div>
+                    <label class="row"><input type="checkbox"> 방 잠금 (비공개)</label>
+                    <div class="row" style="justify-content:flex-end">
+                        <a class="btn ghost" href="#!">취소</a>
+                        <a class="btn primary" href="play.html">생성</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<!-- 개인 모달 -->
+<div id="profile" class="overlay">
+    <div class="modal wide">
+        <div class="card-h"><strong>개인 전적</strong><a class="btn ghost small" href="#!">닫기</a></div>
+        <div class="card-b" style="display:grid;gap:16px">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px">
+                <div class="card">
+                    <div class="card-b">
+                        <div class="muted" style="font-size:12px">총 플레이</div>
+                        <div style="font-size:22px;font-weight:700">128판</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-b">
+                        <div class="muted" style="font-size:12px">1위 횟수</div>
+                        <div style="font-size:22px;font-weight:700">27회</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-b">
+                        <div class="muted" style="font-size:12px">승률</div>
+                        <div style="font-size:22px;font-weight:700">21.1%</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-b">
+                        <div class="muted" style="font-size:12px">최고 점수</div>
+                        <div style="font-size:22px;font-weight:700">1,980</div>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-h"><strong style="font-size:14px">최근 경기 이력</strong></div>
+                <div class="card-b" style="padding:0">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th style="width:28%">일시</th>
+                            <th style="width:20%">모드</th>
+                            <th style="width:16%">순위</th>
+                            <th style="width:18%">점수</th>
+                            <th style="text-align:right">비고</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td>2025-10-18 21:12</td>
+                            <td>Casual</td>
+                            <td>1위</td>
+                            <td>1,640</td>
+                            <td style="text-align:right"><span class="badge">연승 2</span></td>
+                        </tr>
+                        <tr>
+                            <td>2025-10-18 20:55</td>
+                            <td>Ranked</td>
+                            <td>3위</td>
+                            <td>1,180</td>
+                            <td style="text-align:right"></td>
+                        </tr>
+                        <tr>
+                            <td>2025-10-18 20:31</td>
+                            <td>Custom</td>
+                            <td>2위</td>
+                            <td>1,420</td>
+                            <td style="text-align:right"></td>
+                        </tr>
+                        <tr>
+                            <td>2025-10-18 20:05</td>
+                            <td>Casual</td>
+                            <td>5위</td>
+                            <td>860</td>
+                            <td style="text-align:right"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="row" style="justify-content:flex-end;gap:8px">
+                <a class="btn ghost" href="#!">닫기</a>
+                <a class="btn primary" href="rooms.html">방리스트로</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer></footer>
+</body>
+</html>
