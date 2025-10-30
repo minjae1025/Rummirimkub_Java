@@ -7,7 +7,7 @@
 <body>
 <header>
     <div class="bar wrap" style="padding-left:0;padding-right:0" th:fragment="header">
-        <a class="btn" th:herf="@{/}"><strong>Rummirimkub</strong></a>
+        <a class="btn ghost" th:href="@{/}"><strong>Rummirimkub</strong></a>
         <nav class="nav">
             <a class="btn ghost" th:href="@{/}">메인</a>
             <a class="btn ghost" sec:authorize="isAuthenticated()" th:href="@{/user/mypage}">마이페이지</a>
