@@ -14,7 +14,7 @@ public class CreateRoomRequest {
     private String title;
 
     /**
-     * - null이거나 빈 문자열("")이면 '공개방'으로 취급합니다.
+     * - null이거나 빈 문자열이면 공방으로 취급
      */
     @Size(max = 20, message = "비밀번호는 20자 이하로 설정해주세요.")
     private String password;

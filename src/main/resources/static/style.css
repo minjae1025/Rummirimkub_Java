@@ -250,3 +250,57 @@ input[type="checkbox"] {
 footer {
   height: 40px;
 }
+
+/* Chat room styles */
+#chat-container {
+    display: flex;
+    flex-direction: column;
+    height: 70vh;
+}
+
+#participants {
+    flex: 0 0 auto;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--line);
+}
+
+#participants h3 {
+    margin-top: 0;
+}
+
+#participants ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    gap: 10px;
+}
+
+#messages {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding: 10px;
+    border-bottom: 1px solid var(--line);
+}
+
+.chat-message {
+    margin-bottom: 10px;
+}
+
+.event-message {
+    margin-bottom: 10px;
+    font-style: italic;
+    color: var(--muted);
+    text-align: center;
+}
+
+#message-form {
+    flex: 0 0 auto;
+    display: flex;
+    padding-top: 10px;
+}
+
+#message {
+    flex-grow: 1;
+    margin-right: 10px;
+}

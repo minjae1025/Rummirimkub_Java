@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <!--index.html-->
-<html lang="ko" xmlns:sec="http://www.w3.org/1999/xhtml">
+<html lang="ko"
+      xmlns:sec="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -28,7 +30,7 @@
             <div class="card">
                 <div class="card-h"><h3>프로필</h3>
                     <div class="muted" sec:authorize="isAnonymous()">로그인 부탁드립니다.</div>
-                    <div class="muted" sec:authorize="isAuthenticated()">반가워요, Player 님</div>
+                    <div class="muted" sec:authorize="isAuthenticated()" th:text="|반가워요, ${#authentication.name}님!|"></div>
                 </div>
                 <div class="card-b">
                     <div class="card" style="border-radius:12px">

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>대기실</title>
+    <link rel="stylesheet" th:href="@{/style.css}">
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+    <style>
+        .player-list { list-style: none; padding: 0; }
+        .player-item { display: flex; align-items: center; margin-bottom: 10px; }
+        .ready-status { width: 20px; height: 20px; border-radius: 50%; background-color: #ccc; margin-right: 10px; }
+        .ready-status.ready { background-color: #28a745; }
+        .player-name.host { font-weight: bold; }
+        .player-name.host::after { content: ' (방장)'; color: #007bff; }
+        .button-group button:disabled { background-color: #6c757d; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+<header th:insert="~{/layout :: header}"></header>
+<main class="wrap">
+    <div class="card">
+        <div class="card-h">
+            <h2 th:text="${room.title}">Room Title</h2>
+        </div>
+        <div class="card-b">
+            <div id="lobby-container">
+                <h3>참가자</h3>
+                <ul id="player-list" class="player-list">
+                    <li th:each="player : ${room.players}" th:id="'player-' + ${player.username}" class="player-item">
+                        <div th:classappend="${player.ready} ? 'ready'" class="ready-status"></div>
+                        <span th:text="${player.username}"
+                              th:classappend="${player.username == room.host.username} ? 'host'"
+                              class="player-name"></span>
+                    </li>
+                </ul>
+                <div class="button-group" style="margin-top: 20px;">
+                    <!--/* 현재 사용자가 방장인 경우 */-->
+                    <div th:if="${#authentication.name == room.host.username}">
+                        <button id="start-game-btn" disabled>게임 시작</button>
+                        <button id="leave-btn">나가기</button>
+                    </div>
+                    <!--/* 현재 사용자가 방장이 아닌 경우 */-->
+                    <div th:unless="${#authentication.name == room.host.username}">
+                        <button id="ready-btn">준비</button>
+                        <button id="leave-btn">나가기</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+<input type="hidden" id="hiddenRoomId" th:value="${room.roomId}" />
+<input type="hidden" id="hiddenUsername" th:value="${#authentication.name}" />
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const roomId = document.getElementById('hiddenRoomId').value;
+        const username = document.getElementById('hiddenUsername').value;
+        const isHost = document.querySelector('.player-name.host')?.textContent.startsWith(username) || false;
+
+        const readyButton = document.getElementById('ready-btn');
+        const leaveButton = document.getElementById('leave-btn');
+        const startGameButton = document.getElementById('start-game-btn');
+
+        let isReady = false;
+        const sock = new SockJS("/ws");
+        const stomp = Stomp.over(sock);
+
+        stomp.connect({}, function (frame) {
+            console.log('Connected: ' + frame);
+            // 특정 방의 상태 업데이트 구독
+            stomp.subscribe('/topic/room/' + roomId, function (message) {
+                updateLobby(JSON.parse(message.body));
+            });
+            // 게임 시작 메시지 구독
+            stomp.subscribe('/topic/room/' + roomId + '/start', function (message) {
+                window.location.href = `/game/play/${roomId}`;
+            });
+
+            // 입장 메시지 전송
+            stomp.send("/app/lobby.enter", {}, JSON.stringify({
+                roomId: roomId,
+                sender: username
+            }));
+        });
+
+        if (readyButton) {
+            readyButton.addEventListener('click', function () {
+                isReady = !isReady;
+                this.textContent = isReady ? '준비 취소' : '준비';
+                stomp.send("/app/lobby.ready", {}, JSON.stringify({
+                    roomId: roomId,
+                    sender: username,
+                    content: isReady
+                }));
+            });
+        }
+
+        if (startGameButton) {
+            startGameButton.addEventListener('click', function () {
+                stomp.send("/app/lobby.start", {}, JSON.stringify({
+                    roomId: roomId,
+                    sender: username
+                }));
+            });
+        }
+
+        leaveButton.addEventListener('click', function () {
+            stomp.send("/app/lobby.leave", {}, JSON.stringify({
+                roomId: roomId,
+                sender: username
+            }));
+            window.location.href = '/game/rooms';
+        });
+
+        function updateLobby(roomState) {
+            const playerList = document.getElementById('player-list');
+            playerList.innerHTML = ''; // 목록 초기화
+
+            const hostUsername = roomState.host.username;
+
+            roomState.players.forEach(player => {
+                const li = document.createElement('li');
+                li.id = 'player-' + player.username;
+                li.className = 'player-item';
+
+                const statusDiv = document.createElement('div');
+                statusDiv.className = 'ready-status';
+                if (player.ready || player.username === hostUsername) {
+                    statusDiv.classList.add('ready');
+                }
+
+                const nameSpan = document.createElement('span');
+                nameSpan.textContent = player.username;
+                nameSpan.className = 'player-name';
+                if (player.username === hostUsername) {
+                    nameSpan.classList.add('host');
+                }
+
+                li.appendChild(statusDiv);
+                li.appendChild(nameSpan);
+                playerList.appendChild(li);
+            });
+
+            // 방장인 경우, 시작 버튼 활성화 로직
+            if (isHost && startGameButton) {
+                // 호스트를 제외한 모든 플레이어가 준비되었는지 확인
+                const allReady = roomState.players
+                    .filter(p => p.username !== hostUsername)
+                    .every(p => p.ready);
+                const enoughPlayers = roomState.players.length > 1;
+                startGameButton.disabled = !(allReady && enoughPlayers);
+            }
+        }
+    });
+</script>
+</body>
+</html>

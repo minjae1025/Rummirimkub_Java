@@ -26,16 +26,19 @@
                 </div>
                 <div class="card" style="border-radius:12px">
                     <div class="card-b" style="padding:0">
-                        <table>
+                        <table id = "room-table" class="table table-hover">
                             <thead>
                             <tr>
                                 <th style="width:50%">방 이름</th>
-                                <th>모드</th>
                                 <th>인원</th>
-                                <th>핑</th>
+                                <th>상태</th>
+                                <th>비밀방</th>
                                 <th style="text-align:right">입장</th>
                             </tr>
                             </thead>
+                            <tbody id="room-table-body">
+
+                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -48,7 +51,7 @@
                 <form class="card-b grid" style="gap:14px" method="POST" th:action="@{/api/game/createRoom}">
                     <div>
                         <label>방 이름</label>
-                        <input value="나의 첫 번째 방" required th:name="title" type="text">
+                        <input th:value="|${#authentication.name}님의 방|" required th:name="title" type="text">
                     </div>
                     <div class="row" style="gap:12px">
                         <div style="flex:1">
@@ -78,6 +81,7 @@
 <script>
     const lockCheckbox = document.getElementById('lock-checkbox');
     const passwordInput = document.getElementById('password-input');
+    const room_table = document.getElementById('room-table-body');
 
     // Initially disable the password input
     passwordInput.disabled = true;
@@ -96,7 +100,43 @@
 
     fetch("http://localhost:8080/api/game/getRooms")
     .then(res => res.json())
-    .then(res => { console.log(res); });
+    .then(res => {
+        for (let item of res) {
+            const room_title = item['title'];
+            const room_maxPlayers_cnt = item['maxPlayers'];
+            const room_currentPlayer_cnt = item['players']?.length;
+            const room_status = item['gameStart'];
+            const room_private = item['privateRoom'];
+            const room_join = item['roomId'];
+
+            const tr = document.createElement('tr');
+            const td_title = document.createElement('td');
+            td_title.textContent = room_title;
+            const td_players_cnt = document.createElement('td');
+            td_players_cnt.textContent = room_currentPlayer_cnt+"/"+room_maxPlayers_cnt;
+            const td_status = document.createElement('td');
+            td_status.textContent = room_status == 0 ? "대기" : room_status == 1 ? "진행" : "종료";
+            const td_private = document.createElement('td');
+            td_private.textContent = room_private? "Yes" : "No";
+            const td_join = document.createElement('td');
+            td_join.style.textAlign = "right";
+            const td_join_link = document.createElement('a');
+            td_join_link.setAttribute('href', `/game/room/${room_join}`);
+            td_join_link.classList.add('btn');
+            td_join_link.classList.add('small');
+            td_join_link.textContent = '입장';
+            td_join.appendChild(td_join_link);
+
+            tr.appendChild(td_title);
+            tr.appendChild(td_players_cnt);
+            tr.appendChild(td_status);
+            tr.appendChild(td_private);
+            tr.appendChild(td_join);
+
+            room_table.appendChild(tr);
+        }
+        console.log(res);
+    });
 </script>
 </body>
 </html>

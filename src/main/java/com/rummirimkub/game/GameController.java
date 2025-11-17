@@ -34,7 +34,9 @@ public class GameController {
         );
 
         HttpHeaders headers = new HttpHeaders();
+//        headers.setLocation(URI.create("/game/room/"+newRoom.getRoomId()));
         headers.setLocation(URI.create("/game/rooms"));
         return new ResponseEntity<>(headers, HttpStatus.MOVED_PERMANENTLY);
     }
+
 }
