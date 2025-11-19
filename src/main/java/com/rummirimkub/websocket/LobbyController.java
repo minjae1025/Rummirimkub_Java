@@ -27,6 +27,12 @@ public class LobbyController {
         GameRoom room = gameRoomRepository.findRoomById(roomId);
         if (room != null) {
             messagingTemplate.convertAndSend("/topic/room/" + roomId, room);
+
+            ChatMessage chatMessage = new ChatMessage();
+            chatMessage.setType(ChatMessage.MessageType.JOIN);
+            chatMessage.setSender(username);
+            chatMessage.setRoomId(roomId);
+            messagingTemplate.convertAndSend("/topic/room/" + roomId + "/chat", chatMessage);
         }
     }
 
@@ -36,7 +42,23 @@ public class LobbyController {
         String username = lobbyMessage.getSender();
 
         GameRoom room = gameRoomRepository.findRoomById(roomId);
-        if (room != null) {
+        if (room == null) {
+            return;
+        }
+
+        // Check if the leaving user is the host
+        if (room.getHost() != null && room.getHost().getUsername().equals(username)) {
+            // Host is leaving, close the room for everyone
+            messagingTemplate.convertAndSend("/topic/room/" + roomId + "/close", "HOST_LEFT");
+            gameRoomRepository.removeRoom(roomId);
+        } else {
+            // A regular player is leaving
+            ChatMessage chatMessage = new ChatMessage();
+            chatMessage.setType(ChatMessage.MessageType.LEAVE);
+            chatMessage.setSender(username);
+            chatMessage.setRoomId(roomId);
+            messagingTemplate.convertAndSend("/topic/room/" + roomId + "/chat", chatMessage);
+
             room.removePlayer(username);
             if (room.getPlayers().isEmpty()) {
                 gameRoomRepository.removeRoom(roomId);

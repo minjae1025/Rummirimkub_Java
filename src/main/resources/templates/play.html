@@ -1,135 +1,221 @@
 <!DOCTYPE html>
-<!--play.html-->
-<html lang="ko">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <title>게임 플레이 - Rummirimkub</title>
     <link rel="stylesheet" th:href="@{/style.css}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
 </head>
 <body>
 
 <header th:insert="~{/layout :: header}"></header>
 
-<main class="wrap">
+<main class="wrap" th:data-room-id="${room.roomId}" th:data-username="${#authentication.name}">
     <section id="page-play">
         <div class="card">
-            <div class="card-h"><h2>게임 플레이</h2>
-                <div class="muted">HTML-only HUD / 일시정지</div>
+            <div class="card-h">
+                <h2>게임 플레이</h2>
+                <div class="muted">HTML-only HUD / 실시간 채팅</div>
             </div>
-            <div class="card-b">
-                <div class="play-wrap">
+
+            <div class="card-b" style="display:grid;grid-template-columns:1.4fr 1fr;gap:16px">
+
+                <div class="card" style="height:500px;position:relative;display:flex;flex-direction:column">
                     <div class="hud">
-                        <div class="row"><span class="chip">SCORE 000320</span><span class="chip">COMBO 12</span></div>
-                        <div class="row"><span class="chip">TIME 90s</span><a class="btn small" href="#pause">일시정지</a>
+                        <div class="row">
+                            <span class="chip">SCORE 000320</span>
+                            <span class="chip">COMBO 12</span>
+                        </div>
+                        <div class="row">
+                            <span class="chip">TIME 90s</span>
+                            <a class="btn small" href="#pause">일시정지</a>
                         </div>
                     </div>
-                    <div id="pause" class="overlay">
-                        <div class="modal">
-                            <div class="card-h"><strong>일시정지</strong><a class="btn ghost small" href="#!">닫기</a></div>
-                            <div class="card-b" style="display:grid;gap:12px">
-                                <div class="row" style="gap:10px">
-                                    <a class="btn primary full" href="#!">계속하기</a>
-                                    <a class="btn outline full" href="rooms.html">로비로</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div style="position:absolute;inset:0;display:grid;place-items:center;color:#5b7d6a">여기는 게임 렌더링 영역
-                        (시각 데모)
+                    <div style="flex:1;position:relative;display:grid;place-items:center;color:#5b7d6a;border-radius:8px;background:#f7f7f7">
+                        여기는 게임 렌더링 영역 (시각 데모)
                     </div>
                 </div>
-                <div class="row" style="margin-top:14px"><a class="btn ghost" href="rooms.html">뒤로</a></div>
+
+                <div class="card" style="height:500px;display:flex;flex-direction:column">
+                    <div class="card-h">
+                        <strong>실시간 채팅</strong>
+                    </div>
+
+                    <div id="chat-box" style="flex:1; overflow-y:auto; padding:12px; background:#f7f7f7; border-radius:8px;">
+                    </div>
+
+                    <form id="chatForm" class="row" style="margin-top:12px;gap:8px">
+                        <input type="text" id="message" placeholder="메시지를 입력하세요" style="flex:1" required autocomplete="off">
+                        <button type="submit" class="btn primary small">보내기</button>
+                    </form>
+                </div>
+
+            </div>
+
+            <div class="row" style="margin-top:14px">
+                <a class="btn ghost" th:href="@{/game/rooms}">나가기</a>
             </div>
         </div>
     </section>
 </main>
 
-<!-- 개인 모달 -->
-<div id="profile" class="overlay">
-    <div class="modal wide">
-        <div class="card-h"><strong>개인 전적</strong><a class="btn ghost small" href="#!">닫기</a></div>
-        <div class="card-b" style="display:grid;gap:16px">
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px">
-                <div class="card">
-                    <div class="card-b">
-                        <div class="muted" style="font-size:12px">총 플레이</div>
-                        <div style="font-size:22px;font-weight:700">128판</div>
-                    </div>
-                </div>
-                <div class="card">
-                    <div class="card-b">
-                        <div class="muted" style="font-size:12px">1위 횟수</div>
-                        <div style="font-size:22px;font-weight:700">27회</div>
-                    </div>
-                </div>
-                <div class="card">
-                    <div class="card-b">
-                        <div class="muted" style="font-size:12px">승률</div>
-                        <div style="font-size:22px;font-weight:700">21.1%</div>
-                    </div>
-                </div>
-                <div class="card">
-                    <div class="card-b">
-                        <div class="muted" style="font-size:12px">최고 점수</div>
-                        <div style="font-size:22px;font-weight:700">1,980</div>
-                    </div>
-                </div>
-            </div>
-            <div class="card">
-                <div class="card-h"><strong style="font-size:14px">최근 경기 이력</strong></div>
-                <div class="card-b" style="padding:0">
-                    <table>
-                        <thead>
-                        <tr>
-                            <th style="width:28%">일시</th>
-                            <th style="width:20%">모드</th>
-                            <th style="width:16%">순위</th>
-                            <th style="width:18%">점수</th>
-                            <th style="text-align:right">비고</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr>
-                            <td>2025-10-18 21:12</td>
-                            <td>Casual</td>
-                            <td>1위</td>
-                            <td>1,640</td>
-                            <td style="text-align:right"><span class="badge">연승 2</span></td>
-                        </tr>
-                        <tr>
-                            <td>2025-10-18 20:55</td>
-                            <td>Ranked</td>
-                            <td>3위</td>
-                            <td>1,180</td>
-                            <td style="text-align:right"></td>
-                        </tr>
-                        <tr>
-                            <td>2025-10-18 20:31</td>
-                            <td>Custom</td>
-                            <td>2위</td>
-                            <td>1,420</td>
-                            <td style="text-align:right"></td>
-                        </tr>
-                        <tr>
-                            <td>2025-10-18 20:05</td>
-                            <td>Casual</td>
-                            <td>5위</td>
-                            <td>860</td>
-                            <td style="text-align:right"></td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            <div class="row" style="justify-content:flex-end;gap:8px">
-                <a class="btn ghost" href="#!">닫기</a>
-                <a class="btn primary" href="rooms.html">방리스트로</a>
-            </div>
+<div id="pause" class="overlay">
+    <div class="modal">
+        <div class="card-h">
+            <strong>일시정지</strong>
+            <a class="btn ghost small" href="#!">닫기</a>
+        </div>
+        <div class="card-b" style="display:grid;gap:12px">
+            <a class="btn primary full" href="#!">계속하기</a>
+            <a class="btn outline full" th:href="@{/game/rooms}">로비로</a>
         </div>
     </div>
 </div>
 
 <footer></footer>
+
+<script th:inline="javascript">
+    document.addEventListener('DOMContentLoaded', () => {
+        const mainElement = document.querySelector('main');
+        const roomId = mainElement.dataset.roomId;
+        const username = mainElement.dataset.username;
+
+        const chatForm = document.getElementById('chatForm');
+        const messageInput = document.getElementById('message');
+        const chatBox = document.getElementById('chat-box');
+
+        let stompClient = null;
+
+        function connect() {
+            const socket = new SockJS('/ws');
+            stompClient = Stomp.over(socket);
+            stompClient.connect({}, onConnected, onError);
+        }
+
+        function onConnected() {
+            // Chat messages subscription
+            stompClient.subscribe('/topic/room/' + roomId + '/chat', onChatMessageReceived);
+        }
+
+        function onError(error) {
+            addChatMessage({
+                sender: 'System',
+                content: 'Could not connect to WebSocket server. Please refresh this page to try again!',
+                type: 'ERROR'
+            });
+        }
+        
+        function onChatMessageReceived(payload) {
+            const message = JSON.parse(payload.body);
+            addChatMessage(message);
+        }
+
+        function sendMessage(event) {
+            event.preventDefault();
+            const messageContent = messageInput.value.trim();
+            if (messageContent && stompClient) {
+                const chatMessage = {
+                    roomId: roomId,
+                    sender: username,
+                    content: messageInput.value,
+                    type: 'CHAT'
+                };
+                stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(chatMessage));
+                messageInput.value = '';
+            }
+        }
+
+        function addChatMessage(message) {
+            // System messages
+            if (message.type !== 'CHAT') {
+                const eventElement = document.createElement('div');
+                eventElement.classList.add('event');
+                eventElement.style.width = '100%';
+                eventElement.style.textAlign = 'center';
+                eventElement.style.color = '#888';
+                eventElement.style.fontSize = '13px';
+                eventElement.style.margin = '10px 0';
+
+                if (message.type === 'JOIN') {
+                    eventElement.textContent = message.sender + ' 님이 다시 연결되었습니다.';
+                } else if (message.type === 'LEAVE') {
+                    eventElement.textContent = message.sender + ' 님과의 연결이 끊겼습니다.';
+                } else if (message.type === 'ERROR') {
+                    eventElement.textContent = message.content;
+                    eventElement.classList.add('error');
+                }
+                chatBox.appendChild(eventElement);
+                chatBox.scrollTop = chatBox.scrollHeight;
+                return;
+            }
+
+            // User chat messages
+            const isMyMessage = message.sender === username;
+
+            const chatItem = document.createElement('div');
+            chatItem.style.display = 'flex';
+            chatItem.style.flexDirection = isMyMessage ? 'row-reverse' : 'row';
+            chatItem.style.alignItems = 'flex-end';
+            chatItem.style.marginBottom = '12px';
+
+            const avatar = document.createElement('div');
+            avatar.style.width = '36px';
+            avatar.style.height = '36px';
+            avatar.style.borderRadius = '50%';
+            avatar.style.backgroundColor = isMyMessage ? 'var(--accent)' : '#ccc';
+            avatar.style.color = 'white';
+            avatar.style.margin = isMyMessage ? '0 0 0 10px' : '0 10px 0 0';
+            avatar.style.display = 'grid';
+            avatar.style.placeItems = 'center';
+            avatar.style.fontSize = '14px';
+            avatar.style.fontWeight = 'bold';
+            avatar.style.flexShrink = '0';
+            avatar.textContent = message.sender.substring(0, 2).toUpperCase();
+
+            const content = document.createElement('div');
+            content.style.display = 'flex';
+            content.style.flexDirection = 'column';
+            content.style.alignItems = isMyMessage ? 'flex-end' : 'flex-start';
+
+            const senderElement = document.createElement('div');
+            senderElement.textContent = message.sender;
+            senderElement.style.fontSize = '13px';
+            senderElement.style.color = '#555';
+            senderElement.style.marginBottom = '4px';
+
+            const bubbleElement = document.createElement('div');
+            bubbleElement.textContent = message.content;
+            bubbleElement.style.padding = '10px 14px';
+            bubbleElement.style.borderRadius = '18px';
+            bubbleElement.style.maxWidth = '320px';
+            bubbleElement.style.wordWrap = 'break-word';
+            bubbleElement.style.lineHeight = '1.4';
+
+            if (isMyMessage) {
+                bubbleElement.style.background = '#007aff';
+                bubbleElement.style.color = 'white';
+                bubbleElement.style.borderBottomRightRadius = '4px';
+            } else {
+                bubbleElement.style.background = 'white';
+                bubbleElement.style.color = '#222';
+                bubbleElement.style.border = '1px solid #e5e5e5';
+                bubbleElement.style.borderBottomLeftRadius = '4px';
+            }
+
+            content.appendChild(senderElement);
+            content.appendChild(bubbleElement);
+            chatItem.appendChild(avatar);
+            chatItem.appendChild(content);
+            chatBox.appendChild(chatItem);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        chatForm.addEventListener('submit', sendMessage, true);
+
+        connect();
+    });
+</script>
 </body>
 </html>

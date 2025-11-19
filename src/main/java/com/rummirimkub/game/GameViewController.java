@@ -22,7 +22,7 @@ public class GameViewController {
     @GetMapping("/room/{roomId}")
     public String getRoom(@PathVariable String roomId, Model model) {
         GameRoom room = gameRoomRepository.findRoomById(roomId);
-        if (room.isFull()) {
+        if (room == null || room.isFull()) {
             return "redirect:/game/rooms";
         }
         String username = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
@@ -31,8 +31,10 @@ public class GameViewController {
         return "waiting_room";
     }
 
-//    @GetMapping("/play")
-//    public String getRoomPlay(Model model) {
-//        return "play";
-//    }
+    @GetMapping("/play/{roomId}")
+    public String getRoomPlay(@PathVariable String roomId, Model model) {
+        GameRoom room = gameRoomRepository.findRoomById(roomId);
+        model.addAttribute("room", room);
+        return "play";
+    }
 }

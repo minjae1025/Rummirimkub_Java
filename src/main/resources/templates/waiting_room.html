@@ -2,158 +2,309 @@
 <html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
-    <title>대기실</title>
+    <title>대기실 - Rummirimkub</title>
     <link rel="stylesheet" th:href="@{/style.css}">
-    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
-    <style>
-        .player-list { list-style: none; padding: 0; }
-        .player-item { display: flex; align-items: center; margin-bottom: 10px; }
-        .ready-status { width: 20px; height: 20px; border-radius: 50%; background-color: #ccc; margin-right: 10px; }
-        .ready-status.ready { background-color: #28a745; }
-        .player-name.host { font-weight: bold; }
-        .player-name.host::after { content: ' (방장)'; color: #007bff; }
-        .button-group button:disabled { background-color: #6c757d; cursor: not-allowed; }
-    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
 </head>
 <body>
+
 <header th:insert="~{/layout :: header}"></header>
-<main class="wrap">
-    <div class="card">
-        <div class="card-h">
-            <h2 th:text="${room.title}">Room Title</h2>
-        </div>
-        <div class="card-b">
-            <div id="lobby-container">
-                <h3>참가자</h3>
-                <ul id="player-list" class="player-list">
-                    <li th:each="player : ${room.players}" th:id="'player-' + ${player.username}" class="player-item">
-                        <div th:classappend="${player.ready} ? 'ready'" class="ready-status"></div>
-                        <span th:text="${player.username}"
-                              th:classappend="${player.username == room.host.username} ? 'host'"
-                              class="player-name"></span>
-                    </li>
-                </ul>
-                <div class="button-group" style="margin-top: 20px;">
-                    <!--/* 현재 사용자가 방장인 경우 */-->
-                    <div th:if="${#authentication.name == room.host.username}">
-                        <button id="start-game-btn" disabled>게임 시작</button>
-                        <button id="leave-btn">나가기</button>
+<main class="wrap" th:data-room-id="${room.roomId}" th:data-username="${#authentication.name}">
+    <section id="page-wait">
+        <div class="card">
+            <div class="card-h">
+                <h2 th:text="|방 제목: ${room.title}|">방 제목</h2>
+                <div class="muted" id="room-occupancy" th:text="|인원: ${room.players.size()} / ${room.maxPlayers}|"></div>
+            </div>
+
+            <div class="card-b" style="display:grid;grid-template-columns:1fr 1.2fr;gap:16px">
+                <div class="card" style="height:420px;display:flex;flex-direction:column">
+                    <div class="card-h">
+                        <strong>현재 참가자</strong>
                     </div>
-                    <!--/* 현재 사용자가 방장이 아닌 경우 */-->
-                    <div th:unless="${#authentication.name == room.host.username}">
-                        <button id="ready-btn">준비</button>
-                        <button id="leave-btn">나가기</button>
+                    <div class="card-b" style="overflow-y:auto;display:grid;gap:8px" id="user-list">
                     </div>
                 </div>
+
+                <div class="card" style="height:420px;display:flex;flex-direction:column">
+                    <div class="card-h">
+                        <strong>대기실 채팅</strong>
+                    </div>
+                    <div id="chat-box" style="flex:1; overflow-y:auto; padding:12px; background:#f7f7f7; border-radius:8px;">
+                    </div>
+                    <form id="chatForm" class="row" style="margin-top:12px;gap:8px">
+                        <input type="text" id="message" placeholder="메시지를 입력하세요" style="flex:1" required autocomplete="off">
+                        <button class="btn primary small" type="submit">보내기</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="row" style="justify-content:flex-end;margin-top:20px;gap:10px">
+                <a class="btn ghost" id="leaveBtn">나가기</a>
+                <button class="btn" id="readyBtn">준비</button>
+                <button class="btn primary" id="startBtn" th:if="${#authentication.name == room.host.username}" disabled>
+                    게임 시작
+                </button>
+                 <button class="btn primary" th:if="${#authentication.name != room.host.username}" disabled>
+                    방장이 게임 시작을 기다리는 중…
+                </button>
             </div>
         </div>
-    </div>
+    </section>
 </main>
-<input type="hidden" id="hiddenRoomId" th:value="${room.roomId}" />
-<input type="hidden" id="hiddenUsername" th:value="${#authentication.name}" />
 
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const roomId = document.getElementById('hiddenRoomId').value;
-        const username = document.getElementById('hiddenUsername').value;
-        const isHost = document.querySelector('.player-name.host')?.textContent.startsWith(username) || false;
+<script th:inline="javascript">
+    document.addEventListener('DOMContentLoaded', () => {
+        const mainElement = document.querySelector('main');
+        const roomId = mainElement.dataset.roomId;
+        const username = mainElement.dataset.username;
 
-        const readyButton = document.getElementById('ready-btn');
-        const leaveButton = document.getElementById('leave-btn');
-        const startGameButton = document.getElementById('start-game-btn');
+        const chatForm = document.getElementById('chatForm');
+        const messageInput = document.getElementById('message');
+        const chatBox = document.getElementById('chat-box');
+        const userList = document.getElementById('user-list');
+        const leaveBtn = document.getElementById('leaveBtn');
+        const readyBtn = document.getElementById('readyBtn');
+        const startBtn = document.getElementById('startBtn');
+        const roomOccupancy = document.getElementById('room-occupancy');
 
+        let stompClient = null;
         let isReady = false;
-        const sock = new SockJS("/ws");
-        const stomp = Stomp.over(sock);
 
-        stomp.connect({}, function (frame) {
-            console.log('Connected: ' + frame);
-            // 특정 방의 상태 업데이트 구독
-            stomp.subscribe('/topic/room/' + roomId, function (message) {
-                updateLobby(JSON.parse(message.body));
-            });
-            // 게임 시작 메시지 구독
-            stomp.subscribe('/topic/room/' + roomId + '/start', function (message) {
-                window.location.href = `/game/play/${roomId}`;
-            });
+        function connect() {
+            const socket = new SockJS('/ws');
+            stompClient = Stomp.over(socket);
+            stompClient.connect({}, onConnected, onError);
+        }
 
-            // 입장 메시지 전송
-            stomp.send("/app/lobby.enter", {}, JSON.stringify({
-                roomId: roomId,
-                sender: username
-            }));
-        });
+        function onConnected() {
+            stompClient.subscribe('/topic/room/' + roomId, onRoomUpdate);
+            stompClient.subscribe('/topic/room/' + roomId + '/chat', onChatMessageReceived);
+            stompClient.subscribe('/topic/room/' + roomId + '/start', onGameStart);
+            stompClient.subscribe('/topic/room/' + roomId + '/close', onRoomClose);
 
-        if (readyButton) {
-            readyButton.addEventListener('click', function () {
-                isReady = !isReady;
-                this.textContent = isReady ? '준비 취소' : '준비';
-                stomp.send("/app/lobby.ready", {}, JSON.stringify({
-                    roomId: roomId,
-                    sender: username,
-                    content: isReady
-                }));
+            stompClient.send("/app/lobby.enter", {}, JSON.stringify({ roomId: roomId, sender: username }));
+        }
+
+        function onError(error) {
+            addChatMessage({
+                sender: 'System',
+                content: 'Could not connect to WebSocket server. Please refresh this page to try again!',
+                type: 'ERROR'
             });
         }
 
-        if (startGameButton) {
-            startGameButton.addEventListener('click', function () {
-                stomp.send("/app/lobby.start", {}, JSON.stringify({
-                    roomId: roomId,
-                    sender: username
-                }));
-            });
-        }
+        function onRoomUpdate(payload) {
+            const room = JSON.parse(payload.body);
+            updateUserList(room); // Pass the whole room object
+            roomOccupancy.textContent = `인원: ${room.players.length} / ${room.maxPlayers}`;
 
-        leaveButton.addEventListener('click', function () {
-            stomp.send("/app/lobby.leave", {}, JSON.stringify({
-                roomId: roomId,
-                sender: username
-            }));
-            window.location.href = '/game/rooms';
-        });
+            // Host can start if there's more than one player and all others are ready.
+            const allOthersReady = room.players
+                .filter(p => p.username !== room.host.username)
+                .every(p => p.ready);
+            const canStart = room.players.length > 1 && allOthersReady;
 
-        function updateLobby(roomState) {
-            const playerList = document.getElementById('player-list');
-            playerList.innerHTML = ''; // 목록 초기화
-
-            const hostUsername = roomState.host.username;
-
-            roomState.players.forEach(player => {
-                const li = document.createElement('li');
-                li.id = 'player-' + player.username;
-                li.className = 'player-item';
-
-                const statusDiv = document.createElement('div');
-                statusDiv.className = 'ready-status';
-                if (player.ready || player.username === hostUsername) {
-                    statusDiv.classList.add('ready');
-                }
-
-                const nameSpan = document.createElement('span');
-                nameSpan.textContent = player.username;
-                nameSpan.className = 'player-name';
-                if (player.username === hostUsername) {
-                    nameSpan.classList.add('host');
-                }
-
-                li.appendChild(statusDiv);
-                li.appendChild(nameSpan);
-                playerList.appendChild(li);
-            });
-
-            // 방장인 경우, 시작 버튼 활성화 로직
-            if (isHost && startGameButton) {
-                // 호스트를 제외한 모든 플레이어가 준비되었는지 확인
-                const allReady = roomState.players
-                    .filter(p => p.username !== hostUsername)
-                    .every(p => p.ready);
-                const enoughPlayers = roomState.players.length > 1;
-                startGameButton.disabled = !(allReady && enoughPlayers);
+            if (startBtn) {
+                 startBtn.disabled = !canStart;
             }
         }
+
+        function onChatMessageReceived(payload) {
+            const message = JSON.parse(payload.body);
+            addChatMessage(message);
+        }
+
+        function onGameStart(payload) {
+            if (payload.body === 'START') {
+                window.location.href = `/game/play/${roomId}`;
+            }
+        }
+
+        function onRoomClose(payload) {
+            if (payload.body === 'HOST_LEFT') {
+                alert('방장이 방을 나갔습니다. 로비로 이동합니다.');
+                window.location.href = '/game/rooms';
+            }
+        }
+
+        function sendMessage(event) {
+            event.preventDefault();
+            const messageContent = messageInput.value.trim();
+            if (messageContent && stompClient) {
+                const chatMessage = {
+                    roomId: roomId,
+                    sender: username,
+                    content: messageInput.value,
+                    type: 'CHAT'
+                };
+                stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(chatMessage));
+                messageInput.value = '';
+            }
+        }
+
+        function addChatMessage(message) {
+            // System messages
+            if (message.type !== 'CHAT') {
+                const eventElement = document.createElement('div');
+                eventElement.classList.add('event');
+                eventElement.style.width = '100%';
+                eventElement.style.textAlign = 'center';
+                eventElement.style.color = '#888';
+                eventElement.style.fontSize = '13px';
+                eventElement.style.margin = '10px 0';
+
+                if (message.type === 'JOIN') {
+                    eventElement.textContent = message.sender + ' 님이 입장했습니다.';
+                } else if (message.type === 'LEAVE') {
+                    eventElement.textContent = message.sender + ' 님이 퇴장했습니다.';
+                } else if (message.type === 'ERROR') {
+                    eventElement.textContent = message.content;
+                    eventElement.classList.add('error');
+                }
+                chatBox.appendChild(eventElement);
+                chatBox.scrollTop = chatBox.scrollHeight;
+                return;
+            }
+
+            // User chat messages
+            const isMyMessage = message.sender === username;
+
+            const chatItem = document.createElement('div');
+            chatItem.style.display = 'flex';
+            chatItem.style.flexDirection = isMyMessage ? 'row-reverse' : 'row';
+            chatItem.style.alignItems = 'flex-end';
+            chatItem.style.marginBottom = '12px';
+
+            const avatar = document.createElement('div');
+            avatar.style.width = '36px';
+            avatar.style.height = '36px';
+            avatar.style.borderRadius = '50%';
+            avatar.style.backgroundColor = isMyMessage ? 'var(--accent)' : '#ccc';
+            avatar.style.color = 'white';
+            avatar.style.margin = isMyMessage ? '0 0 0 10px' : '0 10px 0 0';
+            avatar.style.display = 'grid';
+            avatar.style.placeItems = 'center';
+            avatar.style.fontSize = '14px';
+            avatar.style.fontWeight = 'bold';
+            avatar.style.flexShrink = '0';
+            avatar.textContent = message.sender.substring(0, 2).toUpperCase();
+
+            const content = document.createElement('div');
+            content.style.display = 'flex';
+            content.style.flexDirection = 'column';
+            content.style.alignItems = isMyMessage ? 'flex-end' : 'flex-start';
+
+            const senderElement = document.createElement('div');
+            senderElement.textContent = message.sender;
+            senderElement.style.fontSize = '13px';
+            senderElement.style.color = '#555';
+            senderElement.style.marginBottom = '4px';
+
+            const bubbleElement = document.createElement('div');
+            bubbleElement.textContent = message.content;
+            bubbleElement.style.padding = '10px 14px';
+            bubbleElement.style.borderRadius = '18px';
+            bubbleElement.style.maxWidth = '320px';
+            bubbleElement.style.wordWrap = 'break-word';
+            bubbleElement.style.lineHeight = '1.4';
+
+            if (isMyMessage) {
+                bubbleElement.style.background = '#007aff';
+                bubbleElement.style.color = 'white';
+                bubbleElement.style.borderBottomRightRadius = '4px';
+            } else {
+                bubbleElement.style.background = 'white';
+                bubbleElement.style.color = '#222';
+                bubbleElement.style.border = '1px solid #e5e5e5';
+                bubbleElement.style.borderBottomLeftRadius = '4px';
+            }
+
+            content.appendChild(senderElement);
+            content.appendChild(bubbleElement);
+            chatItem.appendChild(avatar);
+            chatItem.appendChild(content);
+            chatBox.appendChild(chatItem);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function updateUserList(room) { // Updated to receive the whole room object
+            const players = room.players;
+            const hostUsername = room.host.username;
+            userList.innerHTML = ''; // Clear existing list
+
+            players.forEach(player => {
+                const userElement = document.createElement('div');
+                userElement.classList.add('row');
+                userElement.style.justifyContent = 'space-between';
+
+                const usernameSpan = document.createElement('span');
+                usernameSpan.textContent = player.username;
+                userElement.appendChild(usernameSpan);
+
+                const isHost = player.username === hostUsername;
+                
+                if (isHost) {
+                     const hostBadge = document.createElement('span');
+                     hostBadge.classList.add('chip');
+                     hostBadge.textContent = '방장';
+                     userElement.appendChild(hostBadge);
+                } else if (player.ready) {
+                    const readyBadge = document.createElement('span');
+                    readyBadge.classList.add('badge');
+                    readyBadge.textContent = 'READY';
+                    userElement.appendChild(readyBadge);
+                }
+                userList.appendChild(userElement);
+            });
+        }
+        
+        function toggleReady() {
+            isReady = !isReady;
+            readyBtn.textContent = isReady ? '준비 취소' : '준비';
+            readyBtn.classList.toggle('primary', isReady);
+
+            if (stompClient) {
+                const readyMessage = {
+                    roomId: roomId,
+                    sender: username,
+                    content: String(isReady)
+                };
+                stompClient.send("/app/lobby.ready", {}, JSON.stringify(readyMessage));
+            }
+        }
+
+        function leaveRoom() {
+            if (stompClient) {
+                stompClient.send("/app/lobby.leave", {}, JSON.stringify({ roomId: roomId, sender: username }));
+            }
+            // Give the message a moment to send before redirecting
+            setTimeout(() => {
+                window.location.href = '/game/rooms';
+            }, 100);
+        }
+        
+        function startGame() {
+            if(stompClient) {
+                const startMessage = {
+                    roomId: roomId,
+                    sender: username
+                };
+                stompClient.send("/app/lobby.start", {}, JSON.stringify(startMessage));
+            }
+        }
+
+        chatForm.addEventListener('submit', sendMessage, true);
+        leaveBtn.addEventListener('click', leaveRoom, true);
+        readyBtn.addEventListener('click', toggleReady, true);
+        if(startBtn) {
+            startBtn.addEventListener('click', startGame, true);
+        }
+
+        connect();
     });
 </script>
+
 </body>
 </html>
